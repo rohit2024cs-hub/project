@@ -1,0 +1,30 @@
+# Stage 1: Fast local extraction
+FROM alpine:latest AS builder
+RUN apk add --no-cache tar
+WORKDIR /tmp
+
+# Copy the huge 3.5GB archive you just downloaded directly into the build context
+COPY apache-doris-4.0.7-bin-x64.tar.gz .
+
+RUN mkdir -p /opt/apache-doris \
+    && tar -xzf apache-doris-4.0.7-bin-x64.tar.gz -C /opt/apache-doris --strip-components=1
+
+# Stage 2: Runtime image configuration
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y openjdk-17-jdk-headless curl && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+WORKDIR /opt/apache-doris
+COPY --from=builder /opt/apache-doris /opt/apache-doris
+
+# Tweak internal JVM profile bounds to keep memory overhead light
+RUN sed -i 's/JAVA_OPTS="-Xmx4g/JAVA_OPTS="-Xmx1g/g' fe/conf/fe.conf \
+    && sed -i 's/JAVA_OPTS="-Xms4g/JAVA_OPTS="-Xms512m/g' fe/conf/fe.conf
+
+# --- Back-End (BE) Cluster Configuration tweaks ---
+RUN mkdir -p be/storage \
+    && sed -i 's/# mem_limit = 80%/mem_limit = 1500m/g' be/conf/be.conf \
+    && echo "check_swap = false" >> be/conf/be.conf
+
+EXPOSE 9030 8030
+CMD ["./fe/bin/start_fe.sh", "--console"]

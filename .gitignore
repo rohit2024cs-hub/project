@@ -1,0 +1,14 @@
+# Apache Doris
+doris/apache-doris-4.0.7-bin-x64.tar.gz
+doris/doris_fe_data/
+doris/doris_be_data/
+
+# ClickHouse
+clickhouse/clickhouse_data/
+
+# Node
+app/node_modules/
+
+# Environment
+*.log
+.env

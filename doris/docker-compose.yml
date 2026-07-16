@@ -1,0 +1,52 @@
+services:
+  doris-fe:
+    build:
+      context: .
+      dockerfile: Dockerfile.doris
+    container_name: doris-fe
+    environment:
+      - FE_JVM_ARGUMENTS=-Xmx1200m -Xms1200m -XX:+UseG1GC
+    ports:
+      - "9030:9030"
+      - "8030:8030"
+    mem_limit: 2000m
+    memswap_limit: 2000m
+    volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+      - ./jdbc_drivers:/etc/doris_drivers
+    networks:
+      - external-prod-network  # <--- Change to simple array item
+    restart: always
+
+  doris-be:
+    build:
+      context: .
+      dockerfile: Dockerfile.doris
+    container_name: doris-be
+    command: ["./be/bin/start_be.sh", "--console"]
+    depends_on:
+      - doris-fe
+    ports:
+      - "9050:9050"
+      - "9060:9060"
+    environment:
+      - MEM_LIMIT=750m
+      - CHECK_SWAP=false
+      - IP=doris-be
+    ulimits:
+      nofile:
+        soft: 655350
+        hard: 655350
+    mem_limit: 2000m
+    memswap_limit: 2000m
+    volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+      - ./jdbc_drivers:/etc/doris_drivers
+    networks:
+      - external-prod-network
+    restart: always
+
+networks:
+  external-prod-network:
+    name: prod-network
+    external: true

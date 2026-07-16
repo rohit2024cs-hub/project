@@ -1,0 +1,9 @@
+apache-doris-4.0.7-bin-x64.tar.gz
+
+doris_fe_data/
+doris_be_data/
+clickhouse_data/
+
+node_modules/
+*.log
+.env

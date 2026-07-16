@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+      - "9004:9004"
+    mem_limit: 2g
+    memswap_limit: 2g
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=mysecretpass
+    networks:
+      - external-prod-network
+    restart: always
+
+volumes:
+  clickhouse_data:
+    driver: local
+
+networks:
+  external-prod-network:
+    name: prod-network
+    external: true
